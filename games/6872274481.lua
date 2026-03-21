@@ -240,7 +240,7 @@ local function getWool()
 end
 
 local function getStrength(plr)
-	if not plr.Player then
+	if not plr or not plr.Player then
 		return 0
 	end
 
@@ -473,6 +473,8 @@ local sortmethods = {
 		return a.Entity.Character:GetAttribute('LastDamageTakenTime') < b.Entity.Character:GetAttribute('LastDamageTakenTime')
 	end,
 	Threat = function(a, b)
+		if not a.Entity then return false end
+		if not b.Entity then return true end
 		return getStrength(a.Entity) > getStrength(b.Entity)
 	end,
 	Kit = function(a, b)
@@ -482,8 +484,8 @@ local sortmethods = {
 		return a.Entity.Health < b.Entity.Health
 	end,
 	Angle = function(a, b)
-		if not a.Entity.RootPart then return false end
-		if not b.Entity.RootPart then return true end
+		if not a.Entity or not a.Entity.RootPart then return false end
+		if not b.Entity or not b.Entity.RootPart then return true end
 		local selfrootpos = entitylib.character.RootPart.Position
 		local localfacing = entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1)
 		local angle = math.acos(localfacing:Dot(((a.Entity.RootPart.Position - selfrootpos) * Vector3.new(1, 0, 1)).Unit))
@@ -491,18 +493,22 @@ local sortmethods = {
 		return angle < angle2
 	end,
 	Distance = function(a, b)
-		if not a.Entity.RootPart then return false end
-		if not b.Entity.RootPart then return true end
+		if not a.Entity or not a.Entity.RootPart then return false end
+		if not b.Entity or not b.Entity.RootPart then return true end
 		local selfpos = entitylib.character.RootPart.Position
 		local distA = (a.Entity.RootPart.Position - selfpos).Magnitude
 		local distB = (b.Entity.RootPart.Position - selfpos).Magnitude
 		return distA < distB
 	end,
 	Forest = function(a, b)
+		if not a.Entity then return false end
+		if not b.Entity then return true end
 		local aHasSeed = HasSeed(a.Entity.Character)
 		local bHasSeed = HasSeed(b.Entity.Character)
 		if aHasSeed and not bHasSeed then return true end
 		if not aHasSeed and bHasSeed then return false end
+		if not a.Entity.RootPart then return false end
+		if not b.Entity.RootPart then return true end
 		local selfpos = entitylib.character.RootPart.Position
 		local distA = (a.Entity.RootPart.Position - selfpos).Magnitude
 		local distB = (b.Entity.RootPart.Position - selfpos).Magnitude
@@ -6031,7 +6037,7 @@ run(function()
     AttackRange = Killaura:CreateSlider({
         Name = 'Attack range',
         Min = 1,
-        Max = 35,
+        Max = 22,
         Default = 22, 
         Suffix = function(val)
             return val == 1 and 'stud' or 'studs'
@@ -7456,7 +7462,7 @@ run(function()
 			if not Targets.Players.Enabled and ent.Player then continue end
 			if not Targets.NPCs.Enabled and ent.NPC then continue end
 			if not ent.Targetable then continue end
-			if not ent.Character or not ent.RootPart then continue end
+			if not ent.Character or not ent.RootPart or not ent.RootPart.Parent then continue end
 
 			local delta = ent.RootPart.Position - originPos
 			local distSq = delta.X*delta.X + delta.Y*delta.Y + delta.Z*delta.Z
@@ -7476,14 +7482,18 @@ run(function()
 				if ray then continue end
 			end
 
-			table.insert(valid, ent)
+			table.insert(valid, {Entity = ent})
 		end
 
 		if #valid == 0 then return {} end
 
 		local sortFunc = sortmethods[sortMethod] or sortmethods.Distance
 		table.sort(valid, sortFunc)
-		return valid
+		local unwrapped = {}
+		for _, v in ipairs(valid) do
+			table.insert(unwrapped, v.Entity)
+		end
+		return unwrapped
 	end
 
 	local function pickRandomPart(character)
@@ -7606,9 +7616,12 @@ run(function()
 					end
 
 					local targetVelocity = targetBodyPart.Velocity
+					local bowRelX = bedwars.BowConstantsTable.RelX or 0
+					local bowRelY = bedwars.BowConstantsTable.RelY or 0
+					local bowRelZ = bedwars.BowConstantsTable.RelZ or 0
 					local newlook = CFrame.new(offsetpos, targetBodyPart.Position) *
 						CFrame.new(projmeta.projectile == 'owl_projectile' and Vector3.zero or
-							Vector3.new(bedwars.BowConstantsTable.RelX, bedwars.BowConstantsTable.RelY, bedwars.BowConstantsTable.RelZ))
+							Vector3.new(bowRelX, bowRelY, bowRelZ))
 
 					local calc = prediction.SolveTrajectory(
 						newlook.p, projSpeed, gravity,
@@ -36281,6 +36294,6 @@ run(function()
 				end
 			end
 		end,
-		Tooltip = 'infifiiffififdjafd'
+		Tooltip = 'Keeps Krystal momentum at 100 instantly and permanently'
 	})
 end)
