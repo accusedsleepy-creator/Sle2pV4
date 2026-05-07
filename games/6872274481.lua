@@ -1,3 +1,4 @@
+--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.
 local run = function(func)
     local ok, err = pcall(func)
     if not ok then
@@ -83,6 +84,7 @@ local store = {
     queueType = 'bedwars_test',
     tools = {},
     lastToolUpdate = 0,  
+	silasAbilityTime = 0
 }
 local Reach = {}
 local HitBoxes = {}
@@ -4624,30 +4626,11 @@ run(function()
         return false
     end
 
-    local _t4HitCount = {}
-    local _t4HitTick = {}
-
     local function FireAttackRemote(attackTable, ...)
         if not AttackRemote then return end
         if not canHitWithCustomReg() then return end
 
-        local _atkPlr = playersService:GetPlayerFromCharacter(attackTable.entityInstance)
-        local t4ok = _atkPlr ~= nil
-        local t4plr = _atkPlr
-        if t4ok and t4plr then
-            local targetTier = getAccountTier(t4plr)
-            if targetTier >= 99 then return end
-            if targetTier >= 4 and getAccountTier(lplr) == 0 then
-                local uid = t4plr.UserId
-                local now = tick()
-                if not _t4HitTick[uid] or now - _t4HitTick[uid] >= 10 then
-                    _t4HitTick[uid] = now
-                    _t4HitCount[uid] = 0
-                end
-                _t4HitCount[uid] = (_t4HitCount[uid] or 0) + 1
-                if _t4HitCount[uid] > 32 then return end
-            end
-        end
+        local _atkPlr = playersService:GetPlayerFromCharacter(attackTable.entityInstance) 
 
         local suc = _atkPlr ~= nil
         local plr = _atkPlr
@@ -6645,23 +6628,6 @@ run(function()
 									AnimDelay = tick()
 								end
 
-								do
-									local suc, plr = pcall(function() return playersService:GetPlayerFromCharacter(v.Character) end)
-									if suc and plr then
-										local targetTier = getAccountTier(plr)
-										if targetTier >= 99 then continue end
-										if targetTier >= 4 and getAccountTier(lplr) == 0 then
-											local uid = plr.UserId
-											local now = tick()
-											if not _t4HitTick[uid] or now - _t4HitTick[uid] >= 10 then
-												_t4HitTick[uid] = now
-												_t4HitCount[uid] = 0
-											end
-											_t4HitCount[uid] = (_t4HitCount[uid] or 0) + 1
-											if _t4HitCount[uid] > 32 then continue end
-										end
-									end
-								end
 								AttackRemote:FireServer({
 									weapon = sword.tool,
 									chargedAttack = {chargeRatio = 0},
@@ -7382,7 +7348,6 @@ run(function()
             if not Targets.Players.Enabled and ent.Player then continue end
             if (not Targets.NPCs or not Targets.NPCs.Enabled) and ent.NPC then continue end
             if not ent.Targetable then continue end
-			if ent.Player and getAccountTier(ent.Player) >= 1 and getAccountTier(lplr) == 0 then continue end
             if not ent.Character or not ent.RootPart or not ent.RootPart.Parent then continue end
 
             local delta = ent.RootPart.Position - originPos
