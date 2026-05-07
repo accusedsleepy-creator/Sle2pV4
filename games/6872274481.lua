@@ -4799,11 +4799,6 @@ run(function()
 
         local selfpos = attackTable.validate.selfPosition.value
         local targetpos = attackTable.validate.targetPosition.value
-        local heightDiff = selfpos.Y - targetpos.Y
-        if heightDiff > 3 then
-            selfpos = Vector3.new(selfpos.X, targetpos.Y + 2, selfpos.Z)
-            attackTable.validate.selfPosition.value = selfpos
-        end
         local actualDistance = (selfpos - targetpos).Magnitude
 
         store.attackReach = (actualDistance * 100) // 1 / 100
