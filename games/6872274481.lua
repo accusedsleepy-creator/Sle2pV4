@@ -4555,7 +4555,7 @@ run(function()
     local lastManualSwing = 0
     local lastSwingServerTime = 0
     local lastSwingServerTimeDelta = 0
-    local SophiaCheck
+    local AttackCheck
     local FROZEN_THRESHOLD = 10
     local SwingTime
     local SwingTimeSlider
@@ -4728,10 +4728,9 @@ run(function()
     end
 
     local function getAttackData()
-        if SophiaCheck and SophiaCheck.Enabled then
-            if isFrozen() then
-                return false
-            end
+        if AttackCheck and AttackCheck.Enabled then
+            if isFrozen() then return false end
+            if entitylib.isAlive and (lplr.Character:GetAttribute("StatusEffect_sleep") or lplr.Character:FindFirstChild("elk")) then return false end
         end
 
         if Mouse.Enabled then
@@ -4798,7 +4797,6 @@ run(function()
     end
 
     local preserveSwordIcon = false
-    local sigridcheck = false
 
     Killaura = vape.Categories.Blatant:CreateModule({
         Name = 'Killaura',
@@ -4881,8 +4879,8 @@ run(function()
                 end
 
                 repeat
-                    if SophiaCheck and SophiaCheck.Enabled then
-                        if isFrozen() then
+                    if AttackCheck and AttackCheck.Enabled then
+                        if isFrozen() or (entitylib.isAlive and (lplr.Character:GetAttribute("StatusEffect_sleep") or lplr.Character:FindFirstChild("elk"))) then
                             Attacking = false
                             store.KillauraTarget = nil
                             task.wait(0.3)
@@ -4902,7 +4900,6 @@ run(function()
                     pcall(function() vapeTargetInfo.Targets.Killaura = nil end)
 
                     if sword and canAttack then
-                        if sigridcheck and entitylib.isAlive and lplr.Character:FindFirstChild("elk") then return end
                         local isClaw = string.find(string.lower(tostring(sword and sword.itemType or "")), "summoner_claw")
                         
                         local selfpos = entitylib.character.RootPart.Position
@@ -5641,16 +5638,9 @@ run(function()
         Name = 'Swing only',
         Tooltip = 'Only attacks while swinging manually'
     })
-    Killaura:CreateToggle({
-        Name = "Sigrid Check",
-        Default = false,
-        Function = function(call)
-            sigridcheck = call
-        end
-    })
-    SophiaCheck = Killaura:CreateToggle({
-        Name = 'Sophia Check',
-        Tooltip = 'Stops Killaura when frozen by Sophia',
+     AttackCheck = Killaura:CreateToggle({
+        Name = 'Attack Check',
+        Tooltip = 'Stops attacking when frozen, sleeping, or Sigrid checked',
         Default = false
     })
 end)
@@ -5673,7 +5663,7 @@ run(function()
 	local BoxSwingColor
 	local BoxAttackColor
 	local ParticleTexture
-	local SophiaCheck
+	local AttackCheck
 	local ParticleColor1
 	local ParticleColor2
 	local ParticleSize
@@ -5706,8 +5696,9 @@ run(function()
 	local lastFiredSwing = 0
 
 	local function getAttackData()
-		if SophiaCheck and SophiaCheck.Enabled then
+		if AttackCheck and AttackCheck.Enabled then
 			if isFrozen(nil, 10) then return false end
+			if entitylib.isAlive and (lplr.Character:GetAttribute("StatusEffect_sleep") or lplr.Character:FindFirstChild("elk")) then return false end
 		end
 		if Mouse and Mouse.Enabled then
 			local mousePressed = inputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
@@ -5760,8 +5751,8 @@ run(function()
 					task.spawn(function()
 						local started = false
 						repeat
-							if SophiaCheck and SophiaCheck.Enabled then
-								if isFrozen(nil, 10) then
+							if AttackCheck and AttackCheck.Enabled then
+								if isFrozen(nil, 10) or (entitylib.isAlive and (lplr.Character:GetAttribute("StatusEffect_sleep") or lplr.Character:FindFirstChild("elk"))) then
 									Attacking = false
 									store.KillauraTarget = nil
 									task.wait(0.3)
@@ -5800,8 +5791,8 @@ run(function()
 
 				local swingCooldown = 0
 				repeat
-					if SophiaCheck and SophiaCheck.Enabled then
-						if isFrozen(nil, 10) then
+					if AttackCheck and AttackCheck.Enabled then
+						if isFrozen(nil, 10) or (entitylib.isAlive and (lplr.Character:GetAttribute("StatusEffect_sleep") or lplr.Character:FindFirstChild("elk"))) then
 							Attacking = false
 							store.KillauraTarget = nil
 							task.wait(0.3)
@@ -6094,9 +6085,9 @@ run(function()
 		Name = 'Swing only',
 		Tooltip = 'Only attacks while swinging manually'
 	})
-	SophiaCheck = Killaura:CreateToggle({
-		Name = 'Sophia Check',
-		Tooltip = 'Stops Killaura when frozen by Sophia',
+	AttackCheck = Killaura:CreateToggle({
+		Name = 'Attack Check',
+		Tooltip = 'Stops attacking when frozen, sleeping, or Sigrid checked',
 		Default = false
 	})
 end)
